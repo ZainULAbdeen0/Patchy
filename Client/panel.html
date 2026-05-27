@@ -58,7 +58,6 @@
       user-select: none;
     }
 
-    /* ── TOOLBAR ── */
     #toolbar {
       height: var(--toolbar-h);
       background: var(--bg-header);
@@ -152,7 +151,6 @@
       padding: 0 6px;
     }
 
-    /* ── FILTER BAR ── */
     #filter-bar {
       height: var(--filter-h);
       background: var(--bg-header);
@@ -183,14 +181,12 @@
       color: var(--text-bright);
     }
 
-    /* ── MAIN AREA ── */
     #main {
       flex: 1;
       display: flex;
       overflow: hidden;
     }
 
-    /* ── REQUESTS TABLE ── */
     #requests-pane {
       flex: 1;
       display: flex;
@@ -280,7 +276,6 @@
     .status-5xx { color: var(--status-5xx); }
     .status-0 { color: var(--text-dim); }
 
-    /* ── EMPTY STATE ── */
     #empty-state {
       display: flex;
       flex-direction: column;
@@ -294,7 +289,6 @@
     #empty-state .empty-title { font-size: 13px; color: var(--text); }
     #empty-state .empty-sub { font-size: 11px; text-align: center; line-height: 1.6; max-width: 280px; }
 
-    /* ── DETAIL PANEL ── */
     #detail-panel {
       width: 420px;
       min-width: 280px;
@@ -335,7 +329,6 @@
       flex: 1;
     }
 
-    /* Detail Tabs */
     #detail-tabs {
       display: flex;
       background: var(--bg-header);
@@ -372,7 +365,6 @@
     .tab-content { display: none; padding: 0; }
     .tab-content.active { display: block; }
 
-    /* Headers / Overview sections */
     .section {
       border-bottom: 1px solid var(--border);
     }
@@ -428,7 +420,6 @@
     .kv-value.status-4xx { color: var(--status-4xx); }
     .kv-value.status-5xx { color: var(--status-5xx); }
 
-    /* JSON viewer */
     .json-viewer {
       padding: 8px 12px;
       font-family: var(--font-mono);
@@ -444,7 +435,6 @@
     .json-bool { color: var(--purple); }
     .json-null { color: var(--text-dim); }
 
-    /* Status bar */
     #statusbar {
       height: 20px;
       background: var(--bg-header);
@@ -461,7 +451,6 @@
     }
     .stat span { color: var(--text); font-weight: 600; }
 
-    /* Resize handle */
     #resize-handle {
       width: 4px;
       background: transparent;
@@ -471,7 +460,6 @@
     }
     #resize-handle:hover { background: var(--accent-dim); }
 
-    /* Waterfall bar */
     .waterfall-bar {
       height: 10px;
       background: var(--accent-dim);
@@ -479,7 +467,6 @@
       min-width: 2px;
     }
 
-    /* Copy button */
     .copy-btn {
       display: inline-flex;
       align-items: center;
@@ -499,13 +486,10 @@
 </head>
 <body>
 
-<!-- TOOLBAR -->
 <div id="toolbar">
-  <!-- Record button -->
   <button class="toolbar-btn active" id="btn-record" title="Recording">
     <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="5"/></svg>
   </button>
-  <!-- Clear button -->
   <button class="toolbar-btn" id="btn-clear" title="Clear">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
       <path d="M3 3l10 10M13 3L3 13"/>
@@ -536,7 +520,6 @@
   </div>
 </div>
 
-<!-- FILTER BAR (type) -->
 <div id="filter-bar">
   <button class="type-chip active" data-type="All">All</button>
   <button class="type-chip" data-type="fetch">Fetch</button>
@@ -545,11 +528,8 @@
   <button class="type-chip" data-type="manual">Manual</button>
 </div>
 
-<!-- MAIN -->
 <div id="main">
-  <!-- Requests pane -->
   <div id="requests-pane">
-    <!-- Table header -->
     <div id="table-header">
       <div class="th">#</div>
       <div class="th">Method</div>
@@ -560,7 +540,6 @@
       <div class="th" style="text-align:right">Size</div>
       <div class="th" style="text-align:right">Time</div>
     </div>
-    <!-- Rows -->
     <div id="requests-list">
       <div id="empty-state">
         <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
@@ -574,10 +553,8 @@
     </div>
   </div>
 
-  <!-- Resize handle -->
   <div id="resize-handle"></div>
 
-  <!-- Detail panel -->
   <div id="detail-panel">
     <div id="detail-header">
       <button id="detail-close">✕</button>
@@ -593,21 +570,15 @@
     </div>
 
     <div id="detail-body">
-      <!-- Overview tab -->
       <div class="tab-content active" id="tab-overview"></div>
-      <!-- Request Headers tab -->
       <div class="tab-content" id="tab-req-headers"></div>
-      <!-- Response Headers tab -->
       <div class="tab-content" id="tab-res-headers"></div>
-      <!-- Payload tab -->
       <div class="tab-content" id="tab-payload"></div>
-      <!-- Response tab -->
       <div class="tab-content" id="tab-response"></div>
     </div>
   </div>
 </div>
 
-<!-- STATUS BAR -->
 <div id="statusbar">
   <div class="stat"><span id="stat-total">0</span> requests</div>
   <div class="stat">Total time: <span id="stat-time">0ms</span></div>

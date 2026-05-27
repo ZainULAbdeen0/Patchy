@@ -3,10 +3,6 @@ const https = require("https");
 
 const MAX_BODY_BYTES = 50 * 1024;
 
-/**
- * Patches Node.js http and https modules to intercept outgoing requests.
- * @param {Function} onRequest - callback(requestData) called for every request
- */
 function patchHttp(onRequest) {
   if (typeof onRequest !== "function") return;
 

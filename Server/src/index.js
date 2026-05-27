@@ -6,20 +6,7 @@ let initialized = false;
 let logToConsole = false;
 let filterFn = defaultFilter;
 
-/**
- * Initialize the Next.js Server Inspector.
- *
- * Usage in Next.js:
- *   - In instrumentation.js (recommended for Next.js 13.4+)
- *   - Or in next.config.js
- *
- * @param {Object} options
- * @param {number} [options.port=9119]     - WebSocket server port
- * @param {boolean} [options.logToConsole] - Also log requests to console
- * @param {Function} [options.filter]      - Optional filter fn(requestData) => boolean
- */
 function init(options = {}) {
-  // Only run on server side, only in development
   if (typeof window !== "undefined") return;
   const nodeEnv = process.env.NODE_ENV || "development";
   if (nodeEnv !== "development") return;
@@ -31,31 +18,19 @@ function init(options = {}) {
   logToConsole = logFlag;
   filterFn = typeof filter === "function" ? filter : defaultFilter;
 
-  // Start WebSocket server
   startSocketServer(port);
 
-  // Callback fired on every intercepted request
   function onRequest(data) {
     emitRequest(data);
   }
 
-  // Patch Node.js http/https modules
   patchHttp(onRequest);
 
-  // Patch global fetch (Node 18+)
   patchFetch(onRequest);
 
   console.log("[nextjs-server-inspector] Initialized. Patching http & fetch.");
 }
 
-/**
- * Next.js Middleware helper — wrap your middleware to track
- * requests that go through Next.js middleware layer.
- *
- * Usage:
- *   import { withInspector } from 'nextjs-server-inspector'
- *   export default withInspector(async function middleware(req) { ... })
- */
 function withInspector(middlewareFn) {
   return async function (req, event) {
     const start = Date.now();
@@ -102,15 +77,6 @@ function withInspector(middlewareFn) {
   };
 }
 
-/**
- * Manual wrapper for custom API call functions.
- * Use this if auto-patching misses some calls.
- *
- * Usage:
- *   const data = await trackRequest('GET', 'https://api.example.com/users', async () => {
- *     return await myCustomApiCall()
- *   })
- */
 async function trackRequest(method, url, fn) {
   const start = Date.now();
   let status = 200;

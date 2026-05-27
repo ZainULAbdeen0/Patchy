@@ -1,8 +1,7 @@
-// ── State ────────────────────────────────────────────────────────────────────
 const state = {
-  requests: [],       // all captured requests
-  filtered: [],       // after filter/search
-  selected: null,     // selected request object
+  requests: [],
+  filtered: [],
+  selected: null,
   recording: true,
   filterMethod: "ALL",
   filterType: "All",
@@ -16,7 +15,6 @@ const state = {
 const WS_URL = "ws://localhost:9119";
 const WS_RETRY_MS = 3000;
 
-// ── DOM refs ─────────────────────────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
 const requestsList  = $("requests-list");
 const emptyState    = $("empty-state");
@@ -31,7 +29,6 @@ const statSize      = $("stat-size");
 const statErrors    = $("stat-errors");
 const statErrCount  = $("stat-err-count");
 
-// ── WebSocket ─────────────────────────────────────────────────────────────────
 function connectWS() {
   if (state.ws && state.ws.readyState <= 1) return;
 
@@ -50,7 +47,7 @@ function connectWS() {
       if (msg.type === "request" && state.recording) {
         addRequest(msg.data);
       }
-    } catch (e) { /* ignore bad messages */ }
+    } catch (e) {}
   };
 
   ws.onclose = () => {
@@ -76,7 +73,6 @@ function setWsStatus(status) {
   }
 }
 
-// ── Add / filter requests ─────────────────────────────────────────────────────
 function addRequest(data) {
   state.counter++;
   data._index = state.counter;
@@ -101,9 +97,7 @@ function applyFilters() {
   renderList();
 }
 
-// ── Render list ───────────────────────────────────────────────────────────────
 function renderList() {
-  // Remove old rows (keep empty-state node)
   const rows = requestsList.querySelectorAll(".request-row");
   rows.forEach((r) => r.remove());
 
@@ -123,7 +117,6 @@ function renderList() {
   });
   requestsList.appendChild(frag);
 
-  // Re-highlight selected
   if (state.selected) {
     const sel = requestsList.querySelector(`[data-id="${state.selected.id}"]`);
     if (sel) sel.classList.add("selected");
@@ -157,9 +150,7 @@ function buildRow(req) {
   return row;
 }
 
-// ── Select & detail panel ─────────────────────────────────────────────────────
 function selectRequest(req) {
-  // Deselect old
   const prev = requestsList.querySelector(".request-row.selected");
   if (prev) prev.classList.remove("selected");
 
@@ -174,7 +165,6 @@ function showDetail(req) {
   detailPanel.classList.add("visible");
   detailTitle.textContent = shortUrl(req.url);
 
-  // Switch to active tab content
   renderDetailTab(state.activeTab, req);
 }
 
@@ -182,7 +172,6 @@ function renderDetailTab(tab, req) {
   req = req || state.selected;
   if (!req) return;
 
-  // Clear all tab content
   document.querySelectorAll(".tab-content").forEach((t) => t.classList.remove("active"));
   document.querySelectorAll(".detail-tab").forEach((t) => t.classList.remove("active"));
 
@@ -265,7 +254,6 @@ function renderResponse(req, el) {
   el.appendChild(section.el);
 }
 
-// ── UI helpers ────────────────────────────────────────────────────────────────
 function makeSection(title) {
   const el = document.createElement("div");
   el.className = "section";
@@ -330,7 +318,6 @@ function syntaxHighlight(obj) {
   );
 }
 
-// ── Status bar ────────────────────────────────────────────────────────────────
 function updateStatusBar() {
   const total    = state.requests.length;
   const totalMs  = state.requests.reduce((s, r) => s + (r.duration || 0), 0);
@@ -349,7 +336,6 @@ function updateStatusBar() {
   }
 }
 
-// ── Utils ─────────────────────────────────────────────────────────────────────
 function getStatusClass(status) {
   if (!status) return "status-0";
   if (status >= 500) return "status-5xx";
@@ -394,16 +380,12 @@ function escHtml(str) {
     .replace(/"/g, "&quot;");
 }
 
-// ── Event listeners ───────────────────────────────────────────────────────────
-
-// Record toggle
 $("btn-record").addEventListener("click", () => {
   state.recording = !state.recording;
   $("btn-record").classList.toggle("active", state.recording);
   $("btn-record").title = state.recording ? "Recording" : "Paused";
 });
 
-// Clear
 $("btn-clear").addEventListener("click", () => {
   state.requests = [];
   state.filtered = [];
@@ -414,13 +396,11 @@ $("btn-clear").addEventListener("click", () => {
   updateStatusBar();
 });
 
-// Search
 $("search-input").addEventListener("input", (e) => {
   state.filterSearch = e.target.value.trim();
   applyFilters();
 });
 
-// Method filter buttons
 document.querySelectorAll(".method-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".method-btn").forEach((b) => b.classList.remove("active"));
@@ -430,7 +410,6 @@ document.querySelectorAll(".method-btn").forEach((btn) => {
   });
 });
 
-// Type filter chips
 document.querySelectorAll(".type-chip").forEach((chip) => {
   chip.addEventListener("click", () => {
     document.querySelectorAll(".type-chip").forEach((c) => c.classList.remove("active"));
@@ -440,7 +419,6 @@ document.querySelectorAll(".type-chip").forEach((chip) => {
   });
 });
 
-// Detail tabs
 document.querySelectorAll(".detail-tab").forEach((tab) => {
   tab.addEventListener("click", () => {
     state.activeTab = tab.dataset.tab;
@@ -448,7 +426,6 @@ document.querySelectorAll(".detail-tab").forEach((tab) => {
   });
 });
 
-// Close detail
 $("detail-close").addEventListener("click", () => {
   detailPanel.classList.remove("visible");
   const sel = requestsList.querySelector(".request-row.selected");
@@ -456,7 +433,6 @@ $("detail-close").addEventListener("click", () => {
   state.selected = null;
 });
 
-// Resize handle
 (function initResize() {
   const handle = $("resize-handle");
   const panel  = $("detail-panel");
@@ -485,7 +461,6 @@ $("detail-close").addEventListener("click", () => {
   });
 })();
 
-// Keyboard: Escape closes detail
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     detailPanel.classList.remove("visible");
@@ -493,5 +468,4 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// ── Boot ──────────────────────────────────────────────────────────────────────
 connectWS();

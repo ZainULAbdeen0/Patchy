@@ -1,10 +1,5 @@
 const MAX_BODY_BYTES = 50 * 1024;
 
-/**
- * Patches the global fetch function in Node.js 18+
- * to intercept all outgoing fetch calls.
- * @param {Function} onRequest - callback(requestData) called for every fetch
- */
 function patchFetch(onRequest) {
   if (typeof globalThis.fetch !== "function") {
     console.warn(

@@ -1,16 +1,12 @@
 const { WebSocketServer } = require("ws");
 
-const DEFAULT_PORT = 9119; // Custom port for our inspector
+const DEFAULT_PORT = 9119;
 
 let wss = null;
 const clients = new Set();
 
-/**
- * Starts the WebSocket broadcast server.
- * The browser extension will connect to this.
- */
 function startSocketServer(port = DEFAULT_PORT) {
-  if (wss) return; // Already running
+  if (wss) return;
 
   wss = new WebSocketServer({ port });
 
@@ -26,7 +22,6 @@ function startSocketServer(port = DEFAULT_PORT) {
       `[nextjs-server-inspector] DevTools extension connected. Clients: ${clients.size}`
     );
 
-    // Send a welcome/handshake message
     ws.send(JSON.stringify({ type: "connected", message: "Inspector ready" }));
 
     ws.on("close", () => {
@@ -50,10 +45,6 @@ function startSocketServer(port = DEFAULT_PORT) {
   });
 }
 
-/**
- * Broadcasts a captured request to all connected DevTools clients.
- * @param {Object} requestData
- */
 function broadcast(requestData) {
   if (clients.size === 0) return;
 
@@ -72,16 +63,10 @@ function broadcast(requestData) {
   }
 
   clients.forEach((client) => {
-    if (client.readyState === 1) {
-      // 1 = OPEN
-      client.send(message);
-    }
+    if (client.readyState === 1) client.send(message);
   });
 }
 
-/**
- * Stops the WebSocket server.
- */
 function stopSocketServer() {
   if (wss) {
     wss.close();
