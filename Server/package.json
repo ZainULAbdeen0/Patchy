@@ -1,0 +1,14 @@
+{
+  "name": "nextjs-server-inspector",
+  "version": "0.1.0",
+  "description": "Debug Next.js server-side API calls in your browser DevTools",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": ["nextjs", "debugging", "devtools", "server"],
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

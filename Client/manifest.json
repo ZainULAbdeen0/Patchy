@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Next.js Server Inspector",
+  "version": "0.1.0",
+  "description": "Debug Next.js server-side API calls in Chrome DevTools",
+  "devtools_page": "devtools.html",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["storage"]
+}
