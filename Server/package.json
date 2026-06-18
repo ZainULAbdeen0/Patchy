@@ -1,13 +1,28 @@
 {
   "name": "nextjs-server-inspector",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Debug Next.js server-side API calls in your browser DevTools",
   "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "files": ["src"],
+  "engines": {
+    "node": ">=18"
+  },
+  "author": "Zain Ul Abdeen",
   "scripts": {
     "test": "node test.js"
   },
   "keywords": ["nextjs", "debugging", "devtools", "server"],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZainULAbdeen0/Patchy.git",
+    "directory": "Server"
+  },
+  "homepage": "https://github.com/ZainULAbdeen0/Patchy#readme",
+  "bugs": {
+    "url": "https://github.com/ZainULAbdeen0/Patchy/issues"
+  },
   "dependencies": {
     "ws": "^8.18.0"
   }

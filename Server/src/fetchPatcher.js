@@ -12,6 +12,7 @@ function patchFetch(onRequest) {
   const originalFetch = globalThis.fetch.bind(globalThis);
 
   globalThis.fetch = async function (input, init = {}) {
+    init = init || {};
     const startTime = Date.now();
     const url = input instanceof Request ? input.url : String(input);
     const method = (
@@ -20,7 +21,7 @@ function patchFetch(onRequest) {
     ).toUpperCase();
 
     const requestHeaders = mergeHeaders(input, init);
-    const requestBody = parseRequestBody(init.body);
+    const requestBody = await getRequestBody(input, init);
 
     let response;
     let status = 0;
@@ -92,6 +93,23 @@ function mergeHeaders(input, init) {
   const base = input instanceof Request ? normalizeHeaders(input.headers) : {};
   const override = normalizeHeaders(init.headers);
   return { ...base, ...override };
+}
+
+async function getRequestBody(input, init) {
+  if (Object.prototype.hasOwnProperty.call(init, "body")) {
+    return parseRequestBody(init.body);
+  }
+
+  if (!(input instanceof Request) || !input.body) {
+    return null;
+  }
+
+  try {
+    const text = await input.clone().text();
+    return tryParseJson(truncateText(text));
+  } catch {
+    return null;
+  }
 }
 
 function normalizeHeaders(headers) {

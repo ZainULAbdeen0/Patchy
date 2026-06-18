@@ -1,24 +1,68 @@
-const { init } = require('./src/index');
+const http = require('http');
+const { init, stopSocketServer } = require('./src/index');
 
-init({ port: 9119, logToConsole: true });
+init({ port: 0, logToConsole: true });
 
-setTimeout(async () => {
-  console.log('\n--- Making a test fetch call ---');
-  try {
-    await fetch('https://jsonplaceholder.typicode.com/todos/1');
-    console.log('Fetch call made — check WebSocket broadcast above');
-  } catch (e) {
-    console.log('Fetch error (expected if no network):', e.message);
-  }
-
-  console.log('\n--- Making a test http call ---');
-  const http = require('http');
-  const req = http.request('http://example.com/api/test', (res) => {
-    res.on('data', () => {});
-    res.on('end', () => {
-      console.log('HTTP call complete');
-      process.exit(0);
-    });
+const server = http.createServer((req, res) => {
+  const chunks = [];
+  req.on('data', (chunk) => chunks.push(chunk));
+  req.on('end', () => {
+    res.setHeader('content-type', 'application/json');
+    res.end(JSON.stringify({
+      ok: true,
+      method: req.method,
+      url: req.url,
+      body: Buffer.concat(chunks).toString('utf8') || null,
+    }));
   });
-  req.end();
-}, 500);
+});
+
+function listen(server) {
+  return new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, () => resolve(server.address().port));
+  });
+}
+
+function close(server) {
+  return new Promise((resolve, reject) => {
+    server.close((err) => (err ? reject(err) : resolve()));
+  });
+}
+
+function makeHttpCall(url) {
+  return new Promise((resolve, reject) => {
+    const req = http.get(url, (res) => {
+      res.resume();
+      res.on('end', resolve);
+    });
+    req.on('error', reject);
+  });
+}
+
+(async () => {
+  const port = await listen(server);
+  const baseUrl = `http://127.0.0.1:${port}`;
+
+  try {
+    console.log('\n--- Making a local test fetch call ---');
+    const fetchResponse = await fetch(`${baseUrl}/fetch`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ source: 'fetch' }),
+    });
+    await fetchResponse.text();
+    console.log('Fetch call complete');
+
+    console.log('\n--- Making a local test http.get call ---');
+    await makeHttpCall(`${baseUrl}/api/test`);
+    console.log('HTTP call complete');
+  } finally {
+    await close(server);
+    stopSocketServer();
+  }
+})().catch((err) => {
+  stopSocketServer();
+  console.error(err);
+  process.exit(1);
+});

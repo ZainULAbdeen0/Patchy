@@ -17,6 +17,7 @@ function patchHttp(onRequest) {
       const startTime = Date.now();
       const { url, method, options } = resolveRequestInfo(protocol, args);
       const requestChunks = [];
+      let requestBytes = 0;
       let finished = false;
 
       const requestArgs = [...args];
@@ -89,12 +90,12 @@ function patchHttp(onRequest) {
       const originalEnd = req.end.bind(req);
 
       req.write = function (chunk, encoding, cb) {
-        captureChunk(chunk, encoding, requestChunks);
+        requestBytes = captureChunk(chunk, encoding, requestChunks, requestBytes);
         return originalWrite(chunk, encoding, cb);
       };
 
       req.end = function (chunk, encoding, cb) {
-        captureChunk(chunk, encoding, requestChunks);
+        requestBytes = captureChunk(chunk, encoding, requestChunks, requestBytes);
         return originalEnd(chunk, encoding, cb);
       };
 
@@ -122,6 +123,12 @@ function patchHttp(onRequest) {
         });
       });
 
+      return req;
+    };
+
+    module.get = function (...args) {
+      const req = module.request(...args);
+      req.end();
       return req;
     };
   });
@@ -173,17 +180,23 @@ function formatUrl(protocol, options) {
   return `${protocol}://${host}${port}${path}`;
 }
 
-function captureChunk(chunk, encoding, chunks) {
+function captureChunk(chunk, encoding, chunks, capturedBytes = 0) {
   const buffer = toBuffer(chunk, encoding);
-  if (!buffer) return;
-  chunks.push(buffer);
+  if (!buffer) return capturedBytes;
+  if (capturedBytes < MAX_BODY_BYTES) {
+    const remaining = MAX_BODY_BYTES - capturedBytes;
+    chunks.push(buffer.slice(0, remaining));
+  }
+  return capturedBytes + buffer.length;
 }
 
 function toBuffer(chunk, encoding) {
   if (!chunk) return null;
   if (Buffer.isBuffer(chunk)) return chunk;
   if (chunk instanceof Uint8Array) return Buffer.from(chunk);
-  if (typeof chunk === "string") return Buffer.from(chunk, encoding);
+  if (typeof chunk === "string") {
+    return Buffer.from(chunk, typeof encoding === "string" ? encoding : undefined);
+  }
   try {
     return Buffer.from(chunk);
   } catch {

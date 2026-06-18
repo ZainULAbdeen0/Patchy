@@ -8,11 +8,14 @@ const clients = new Set();
 function startSocketServer(port = DEFAULT_PORT) {
   if (wss) return;
 
-  wss = new WebSocketServer({ port });
+  wss = new WebSocketServer({ port, host: "127.0.0.1" });
 
   wss.on("listening", () => {
+    const address = wss.address();
+    const activePort =
+      address && typeof address === "object" ? address.port : port;
     console.log(
-      `[nextjs-server-inspector] WebSocket server running on ws://localhost:${port}`
+      `[nextjs-server-inspector] WebSocket server running on ws://localhost:${activePort}`
     );
   });
 
@@ -42,6 +45,10 @@ function startSocketServer(port = DEFAULT_PORT) {
       "[nextjs-server-inspector] Failed to start server:",
       err.message
     );
+    if (!wss || !wss.address()) {
+      clients.clear();
+      wss = null;
+    }
   });
 }
 
@@ -69,6 +76,11 @@ function broadcast(requestData) {
 
 function stopSocketServer() {
   if (wss) {
+    clients.forEach((client) => {
+      try {
+        client.close();
+      } catch {}
+    });
     wss.close();
     wss = null;
     clients.clear();

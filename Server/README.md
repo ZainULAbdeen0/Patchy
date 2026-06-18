@@ -23,9 +23,9 @@ npm install nextjs-server-inspector
 
 ## Setup in Next.js
 
-### Option 1 — instrumentation.js (Recommended, Next.js 13.4+)
+### Option 1 — instrumentation.ts (Recommended)
 
-Create `instrumentation.js` in your project root:
+Create an `instrumentation.ts` (or `.js`) file. Place it in your **project root**, or inside **`src/`** if your app uses a `src/` directory (e.g. `src/instrumentation.ts`):
 
 ```js
 export async function register() {
@@ -36,7 +36,7 @@ export async function register() {
 }
 ```
 
-Enable it in `next.config.js`:
+On **Next.js 15+** instrumentation is stable — no extra config is required. On **Next.js 13.4–14**, enable it in `next.config.js`:
 
 ```js
 module.exports = {
@@ -95,11 +95,28 @@ export default withInspector(async function middleware(req) {
 
 ---
 
-## Browser Extension
+## Browser Extension (required)
 
-Install the companion Chrome extension (see `/Client` folder) to see calls in DevTools.
+This package only runs the **server** side. To view captured calls you need the companion Chrome extension, which lives in the [`Client/`](https://github.com/ZainULAbdeen0/Patchy/tree/main/Client) folder of the repo.
 
-The extension connects to `ws://localhost:9119` and shows all server-side calls in a custom **"Server Inspector"** panel in Chrome DevTools.
+Install it as an unpacked extension:
+
+1. Clone the repo (or download the `Client/` folder).
+2. Open `chrome://extensions` and turn on **Developer mode**.
+3. Click **Load unpacked** and select the `Client/` folder.
+4. Open DevTools on any page — a **"Server Inspector"** panel appears.
+
+The extension connects to `ws://localhost:9119` and shows all server-side calls captured by `init()`.
+
+---
+
+## Security
+
+This is a **development-only** tool. It patches `http`, `https`, and `fetch` and captures full request/response headers and bodies — which may include `Authorization` headers, cookies, tokens, and other secrets — then broadcasts them over a local WebSocket.
+
+- `init()` is a no-op unless `NODE_ENV === 'development'`. **Never enable it in production.**
+- The WebSocket server binds to `127.0.0.1` only, so it is not exposed to your LAN.
+- Any local process (including web pages open in your browser) that connects to `ws://localhost:9119` can read captured traffic. Only run it on a trusted machine.
 
 ---
 

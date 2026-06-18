@@ -85,12 +85,14 @@ function addRequest(data) {
 function applyFilters() {
   const { filterMethod, filterType, filterSearch } = state;
   state.filtered = state.requests.filter((r) => {
-    if (filterMethod !== "ALL" && r.method !== filterMethod) return false;
+    const method = String(r.method || "");
+    const url = String(r.url || "");
+    if (filterMethod !== "ALL" && method !== filterMethod) return false;
     if (filterType !== "All" && r.type !== filterType) return false;
     if (filterSearch) {
       const q = filterSearch.toLowerCase();
-      if (!r.url.toLowerCase().includes(q) &&
-          !r.method.toLowerCase().includes(q)) return false;
+      if (!url.toLowerCase().includes(q) &&
+          !method.toLowerCase().includes(q)) return false;
     }
     return true;
   });
@@ -118,7 +120,7 @@ function renderList() {
   requestsList.appendChild(frag);
 
   if (state.selected) {
-    const sel = requestsList.querySelector(`[data-id="${state.selected.id}"]`);
+    const sel = findRowById(state.selected.id);
     if (sel) sel.classList.add("selected");
   }
 }
@@ -126,28 +128,36 @@ function renderList() {
 function buildRow(req) {
   const row = document.createElement("div");
   row.className = "request-row" + (isError(req) ? " error" : "");
-  row.dataset.id = req.id;
+  row.dataset.id = String(req.id || "");
   if (state.selected && state.selected.id === req.id) row.classList.add("selected");
 
   const statusClass = getStatusClass(req.status);
-  const methodClass = `method-${req.method.toLowerCase()}`;
+  const method = String(req.method || "");
+  const type = String(req.type || "");
+  const methodClass = `method-${method.toLowerCase().replace(/[^a-z0-9_-]/g, "")}`;
   const urlShort    = shortUrl(req.url);
   const sizeStr     = formatSize(req._size);
   const timeStr     = req.duration ? `${req.duration}ms` : "—";
 
-  row.innerHTML = `
-    <div class="td td-index">${req._index}</div>
-    <div class="td td-method ${methodClass}">${req.method}</div>
-    <div class="td td-status ${statusClass}">${req.status || "—"}</div>
-    <div class="td td-url" title="${req.url}">${urlShort}</div>
-    <div class="td td-type">${req.type}</div>
-    <div class="td td-initiator">server</div>
-    <div class="td td-size">${sizeStr}</div>
-    <div class="td td-time">${timeStr}</div>
-  `;
+  appendCell(row, "td td-index", req._index);
+  appendCell(row, `td td-method ${methodClass}`, method);
+  appendCell(row, `td td-status ${statusClass}`, req.status || "—");
+  appendCell(row, "td td-url", urlShort, String(req.url || ""));
+  appendCell(row, "td td-type", type);
+  appendCell(row, "td td-initiator", "server");
+  appendCell(row, "td td-size", sizeStr);
+  appendCell(row, "td td-time", timeStr);
 
   row.addEventListener("click", () => selectRequest(req));
   return row;
+}
+
+function appendCell(row, className, text, title) {
+  const cell = document.createElement("div");
+  cell.className = className;
+  cell.textContent = String(text ?? "");
+  if (title) cell.title = title;
+  row.appendChild(cell);
 }
 
 function selectRequest(req) {
@@ -155,7 +165,7 @@ function selectRequest(req) {
   if (prev) prev.classList.remove("selected");
 
   state.selected = req;
-  const cur = requestsList.querySelector(`[data-id="${req.id}"]`);
+  const cur = findRowById(req.id);
   if (cur) cur.classList.add("selected");
 
   showDetail(req);
@@ -350,11 +360,17 @@ function isError(req) {
 
 function shortUrl(url) {
   try {
-    const u = new URL(url);
+    const u = new URL(String(url || ""));
     return u.pathname + (u.search || "");
   } catch {
-    return url;
+    return String(url || "");
   }
+}
+
+function findRowById(id) {
+  const idString = String(id || "");
+  return Array.from(requestsList.querySelectorAll(".request-row"))
+    .find((row) => row.dataset.id === idString);
 }
 
 function estimateSize(body) {
@@ -373,7 +389,7 @@ function formatSize(bytes) {
 }
 
 function escHtml(str) {
-  return str
+  return String(str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
