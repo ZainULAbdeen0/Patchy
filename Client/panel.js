@@ -1,3 +1,5 @@
+const DEFAULT_PORT = 9119;
+
 const state = {
   requests: [],
   filtered: [],
@@ -10,10 +12,12 @@ const state = {
   ws: null,
   wsRetryTimer: null,
   counter: 0,
+  port: DEFAULT_PORT,
 };
 
-const WS_URL = "ws://localhost:9119";
 const WS_RETRY_MS = 3000;
+
+const wsUrl = () => `ws://localhost:${state.port}`;
 
 const $ = (id) => document.getElementById(id);
 const requestsList  = $("requests-list");
@@ -28,12 +32,13 @@ const statTime      = $("stat-time");
 const statSize      = $("stat-size");
 const statErrors    = $("stat-errors");
 const statErrCount  = $("stat-err-count");
+const portInput     = $("port-input");
 
 function connectWS() {
   if (state.ws && state.ws.readyState <= 1) return;
 
   setWsStatus("connecting");
-  const ws = new WebSocket(WS_URL);
+  const ws = new WebSocket(wsUrl());
   state.ws = ws;
 
   ws.onopen = () => {
@@ -70,6 +75,74 @@ function setWsStatus(status) {
     wsLabel.textContent = "Connecting…";
   } else {
     wsLabel.textContent = "Disconnected";
+  }
+}
+
+function disconnectWS() {
+  clearTimeout(state.wsRetryTimer);
+  if (state.ws) {
+    // Detach handlers so the old socket can't trigger an auto-reconnect.
+    state.ws.onopen = null;
+    state.ws.onmessage = null;
+    state.ws.onclose = null;
+    state.ws.onerror = null;
+    try { state.ws.close(); } catch (e) {}
+    state.ws = null;
+  }
+}
+
+function setPort(port) {
+  const alreadyLive = state.ws && state.ws.readyState <= 1;
+  if (port === state.port && alreadyLive) return;
+
+  const changed = port !== state.port;
+  state.port = port;
+  portInput.value = port;
+  persistPort(port);
+
+  // Switching to a different server — drop the previous server's requests.
+  if (changed) clearRequests();
+  disconnectWS();
+  connectWS();
+}
+
+function applyPortFromInput() {
+  const port = normalizePort(portInput.value);
+  if (port === null) {
+    portInput.value = state.port;
+    return;
+  }
+  setPort(port);
+}
+
+function normalizePort(value) {
+  const n = parseInt(value, 10);
+  if (!Number.isInteger(n) || n < 1 || n > 65535) return null;
+  return n;
+}
+
+function storageKey() {
+  const tabId =
+    chrome.devtools && chrome.devtools.inspectedWindow
+      ? chrome.devtools.inspectedWindow.tabId
+      : "default";
+  return `inspectorPort:${tabId}`;
+}
+
+function persistPort(port) {
+  try {
+    chrome.storage.local.set({ [storageKey()]: port });
+  } catch (e) {}
+}
+
+function loadStoredPort(cb) {
+  try {
+    const key = storageKey();
+    chrome.storage.local.get(key, (res) => {
+      cb(normalizePort(res && res[key]));
+    });
+  } catch (e) {
+    cb(null);
   }
 }
 
@@ -402,7 +475,7 @@ $("btn-record").addEventListener("click", () => {
   $("btn-record").title = state.recording ? "Recording" : "Paused";
 });
 
-$("btn-clear").addEventListener("click", () => {
+function clearRequests() {
   state.requests = [];
   state.filtered = [];
   state.selected = null;
@@ -410,6 +483,16 @@ $("btn-clear").addEventListener("click", () => {
   detailPanel.classList.remove("visible");
   renderList();
   updateStatusBar();
+}
+
+$("btn-clear").addEventListener("click", clearRequests);
+
+portInput.addEventListener("change", applyPortFromInput);
+portInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    applyPortFromInput();
+    portInput.blur();
+  }
 });
 
 $("search-input").addEventListener("input", (e) => {
@@ -484,4 +567,10 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-connectWS();
+loadStoredPort((storedPort) => {
+  if (storedPort !== null) {
+    state.port = storedPort;
+    portInput.value = storedPort;
+  }
+  connectWS();
+});

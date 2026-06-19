@@ -55,6 +55,8 @@ if (process.env.NODE_ENV === 'development') {
 module.exports = { /* your config */ }
 ```
 
+> **Restart required:** the `instrumentation` / `next.config.js` hook runs only when the server boots. Restart your dev server after installing the package or after changing the `port` passed to `init()`.
+
 ---
 
 ## Options
@@ -97,16 +99,13 @@ export default withInspector(async function middleware(req) {
 
 ## Browser Extension (required)
 
-This package only runs the **server** side. To view captured calls you need the companion Chrome extension, which lives in the [`Client/`](https://github.com/ZainULAbdeen0/Patchy/tree/main/Client) folder of the repo.
+This package only runs the **server** side. To view captured calls you need the companion Chrome extension.
 
-Install it as an unpacked extension:
+Install **[Next.js Server Inspector](https://chromewebstore.google.com/detail/nextjs-server-inspector/lmneolmmljgfdbjaljojombpmcdoleah)** from the Chrome Web Store, then open DevTools on any page — a **"Server Inspector"** panel appears.
 
-1. Clone the repo (or download the `Client/` folder).
-2. Open `chrome://extensions` and turn on **Developer mode**.
-3. Click **Load unpacked** and select the `Client/` folder.
-4. Open DevTools on any page — a **"Server Inspector"** panel appears.
+> Prefer to run it from source? The extension lives in the [`Client/`](https://github.com/ZainULAbdeen0/Patchy/tree/main/Client) folder. Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and select the `Client/` folder.
 
-The extension connects to `ws://localhost:9119` and shows all server-side calls captured by `init()`.
+The extension connects to `ws://localhost:9119` by default and shows all server-side calls captured by `init()`. To inspect an app on a different port, type the port into the **Port** box in the panel toolbar and press Enter. Each DevTools instance remembers its own port, so you can open DevTools on several tabs and inspect multiple apps at once — each running `init()` on its own port.
 
 ---
 

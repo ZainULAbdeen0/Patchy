@@ -151,6 +151,38 @@
       padding: 0 6px;
     }
 
+    #port-control {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .port-label {
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    #port-input {
+      width: 58px;
+      height: 22px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-light);
+      border-radius: 3px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 0 6px;
+      outline: none;
+      text-align: right;
+      -moz-appearance: textfield;
+    }
+    #port-input:focus { border-color: var(--accent-dim); }
+    #port-input::-webkit-inner-spin-button,
+    #port-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
     #filter-bar {
       height: var(--filter-h);
       background: var(--bg-header);
@@ -513,6 +545,10 @@
 
   <div class="toolbar-right">
     <span id="request-count">0 requests</span>
+    <div id="port-control" title="WebSocket port of the inspector server (press Enter to connect)">
+      <span class="port-label">Port</span>
+      <input id="port-input" type="number" min="1" max="65535" step="1" value="9119" />
+    </div>
     <div id="ws-status">
       <div id="ws-dot" class="connecting"></div>
       <span id="ws-label">Connecting…</span>
